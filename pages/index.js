@@ -65,7 +65,7 @@ const HomePage = () => {
 
 
     const generateKeyPairForUser = () => {
-        const userIdentity = EthCrypto.createIdentity()
+        const userIdentity = EthCrypto.createIdentity();
         setUserIdentity(userIdentity);
         console.dir(userIdentity);
         downloadUserKeysFile(userIdentity.publicKey, userIdentity.privateKey, userIdentity.address);
@@ -73,7 +73,7 @@ const HomePage = () => {
 
 
     const generateKeyForRecipient = () => {
-        const recipientIdentity = EthCrypto.createIdentity()
+        const recipientIdentity = EthCrypto.createIdentity();
         setRecipientIdentity(recipientIdentity);
         console.dir(recipientIdentity);
         downloadRecipientKey(recipientIdentity.publicKey, recipientIdentity.privateKey, recipientIdentity.address);
@@ -95,13 +95,13 @@ const HomePage = () => {
     };
 
     const registerRecipient = async () => {
-        if (!recipientIdentity.publicKey || !recipientId || !recipientIpAddress || !recipientPort) {
+        if (!recipientId || !recipientIpAddress || !recipientPort) {
             console.error("Dati del destinatario incompleti");
             return;
         }
         try {
             console.log("Registrando il recipient");
-            const transaction = await contract.registerRecipient(recipientIdentity.publicKey, recipientId, recipientPort, recipientIpAddress);
+            const transaction = await contract.registerRecipient(recipientId, recipientPort, recipientIpAddress);
             setIsLoading(true);
             setIsRecipientRegistered(false);
             await transaction.wait();
@@ -186,10 +186,9 @@ const HomePage = () => {
                     </div>
                     <div>
                         <h1>Registrazione Destinatario</h1>
-                        <button className="button-style"  onClick={generateKeyForRecipient}>Genera chiavi per destinatario</button>
+                        <button className="button-style"  onClick={generateKeyForRecipient} >Genera chiavi per destinatario</button>
                     </div>
-                    <div>
-                        <h1>Registrazione Destinatario</h1>
+                    <div style={{paddingTop: '20px'}}>
                         <div>
                             <div>
                                 <label>ID del destinatario: </label>
@@ -242,7 +241,7 @@ const HomePage = () => {
             <div className="column principal-div-style">
                 <div>
                     <h1>Apri DataMule</h1>
-                    <button className="button-style" onClick={openModal}>Apri Modale</button>
+                    <button className="button-style" onClick={openModal}>Apri DataMule</button>
                     {showModal && (
                         <div className="modal">
                             <div className="modal-content">

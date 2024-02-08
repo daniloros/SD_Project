@@ -9,7 +9,6 @@ contract TrustedDataMule {
 
     struct Recipient {
         bool isRegistered;
-        string publicKey;
         string id_d;
         string port;
         string ip_address;
@@ -30,10 +29,10 @@ contract TrustedDataMule {
     }
 
     // Funzione per registrare un destinatario con la sua chiave pubblica, ID e informazioni di contatto
-    function registerRecipient(string memory publicKey, string memory id_d, string memory port, string memory ip_address) public {
+    function registerRecipient(string memory id_d, string memory port, string memory ip_address) public {
         bytes32 id_d_bytes = keccak256(abi.encodePacked(id_d));
         require(!recipientDetails[id_d_bytes].isRegistered, "Recipient already registered");
-        recipientDetails[id_d_bytes] = Recipient(true, publicKey, id_d, port, ip_address);
+        recipientDetails[id_d_bytes] = Recipient(true, id_d, port, ip_address);
     }
 
     function registerDataMule() external {
@@ -69,14 +68,6 @@ contract TrustedDataMule {
         require(sig.length == 65, "invalid signature length");
 
         assembly {
-        /*
-        First 32 bytes stores the length of the signature
-
-        add(sig, 32) = pointer of sig + 32
-        effectively, skips first 32 bytes of signature
-
-        mload(p) loads next 32 bytes starting at the memory address p into memory
-        */
 
         // first 32 bytes, after the length prefix
             r := mload(add(sig, 32))
@@ -86,7 +77,6 @@ contract TrustedDataMule {
             v := byte(0, mload(add(sig, 96)))
         }
 
-        // implicitly return (r, s, v)
     }
 
 
