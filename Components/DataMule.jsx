@@ -14,16 +14,11 @@ const DataMule = ({ contract }) => {
     const [isVerified, setisVerified] = useState(false);
     const [isMessageSent, setIsMessageSent] = useState(false);
 
-
-    const signatureVerifiedEvent = contract.filters.SignatureVerified();
-    const messageSentEvent = contract.filters.MessageSent();
-
-
+    // const messageSentEvent = contract.filters.MessageSent();
 
     useEffect(() => {
         // Recupera i dati dalla sessionStorage
         const storedSignedMessage = sessionStorage.getItem('signedMessage');
-        console.dir(storedSignedMessage);
         if (storedSignedMessage) {
             setSignedMessage(storedSignedMessage);
         }
@@ -31,25 +26,23 @@ const DataMule = ({ contract }) => {
         updateAccumulatedTokens();
     }, []);
 
+
     useEffect(() => {
-        // Sottoscrivi all'evento SignatureVerified per aggiornare il numero dei token accumulati
-        const updateTokensOnEvent = (event) => {
-            const signer = event.args[0];
-            const publicKey = event.args[1];
-            console.log(`La firma per l'indirizzo ${signer} è stata verificata con successo con la chiave pubblica ${publicKey}`);
+        const checkForVerify = async () => {
+            contract.on("SignatureVerified", async (signer, publicKey) => {
+                console.log(`La firma per l'indirizzo ${signer} è stata verificata con successo con la chiave pubblica ${publicKey}`);
+                setIsSignatureVerified(true);
+                // Aggiorna il numero dei token accumulati
+                updateAccumulatedTokens();
+            });
 
-            setIsSignatureVerified(true);
-            // Aggiorna il numero dei token accumulati
-            updateAccumulatedTokens();
-        };
+            return () => {
+                contract.off("SignatureVerified");
+            };
+        }
+        checkForVerify();
+    }, [contract]);
 
-        contract.on(signatureVerifiedEvent, updateTokensOnEvent);
-
-        // Cleanup dell'evento al momento della disconnessione o del component unmounting
-        return () => {
-            contract.off(signatureVerifiedEvent, updateTokensOnEvent);
-        };
-    }, [contract, signatureVerifiedEvent]);
 
 
     // Aggiorna il numero dei token accumulati quando il valore cambia
@@ -62,16 +55,14 @@ const DataMule = ({ contract }) => {
             } else {
                 console.error('Field accumulatedTokens is undefined or not present in dataMule.');
             }
-            console.log(dataMule);
             // setAccumulatedTokens(dataMule.accumulatedTokens.toNumber());
         }catch (e) {
             console.log(e);
         }
-
     };
 
-
     const verifyAndForwardMessage = async () => {
+        setIsMessageSent(false);
         try {
             const { msg, signature } = JSON.parse(signedMessage);
             console.log(msg);
@@ -100,22 +91,12 @@ const DataMule = ({ contract }) => {
             setIsLoading(true);
             setIsMessageSent(false);
             const messageSended = await contract.sendMessage(messageHash, msg.recipientId);
-            await messageSended.wait();
+            // await messageSended.wait();
             setIsLoading(false);
             setIsMessageSent(true);
 
-            const sendMessageOnEvent = (event) => {
-                const ip_port = event.args[1];
-                const port = event.args[2];
-                console.log(`Messaggio inviato al seguente indirizzo: ${ip_port} : ${port}`);
-            };
+            console.log(messageSended);
 
-            contract.on(messageSentEvent, sendMessageOnEvent);
-
-            // Cleanup dell'evento al momento della disconnessione o del component unmounting
-            return () => {
-                contract.off(messageSentEvent, sendMessageOnEvent);
-            };
         } catch (e) {
             console.log(e.message)
         }
@@ -123,25 +104,25 @@ const DataMule = ({ contract }) => {
 
     if(isLoading){
         return (
-        <div className="spinner">
-            <ClipLoader color={"#36D7B7"} loading={isLoading} className="spinner-style" size={150} />
-        </div>
+            <div className="spinner">
+                <ClipLoader color={"#36D7B7"} loading={isLoading} className="spinner-style" size={150} />
+            </div>
         );
     } else
         return (
-        <div>
-            <h1>DataMule Component</h1>
-            <p>Accumulated Tokens: {accumulatedTokens.toString()}</p>
-            <div style={{paddingBottom: '20px'}}>
-                <button className="button-style" onClick={verifyAndForwardMessage}>Verifica e Inoltra Messaggio</button>
-                {isVerified && <Image src={images.success} alt="correct" width={30} height={30} style={imageStyle}/>}
-            </div>
             <div>
-                <button className="button-style" onClick={sendMessageToForward} disabled={!isSignatureVerified}>Manda il messaggio</button>
-                {isMessageSent && <Image src={images.success} alt="correct" width={30} height={30} style={imageStyle}/>}
+                <h1>DataMule Component</h1>
+                <p>Accumulated Tokens: {accumulatedTokens.toString()}</p>
+                <div style={{paddingBottom: '20px'}}>
+                    <button className="button-style" onClick={verifyAndForwardMessage}>Verifica e Inoltra Messaggio</button>
+                    {isVerified && <Image src={images.success} alt="correct" width={30} height={30} style={imageStyle}/>}
+                </div>
+                <div>
+                    <button className="button-style" onClick={sendMessageToForward} disabled={!isSignatureVerified}>Manda il messaggio</button>
+                    {isMessageSent && <Image src={images.success} alt="correct" width={30} height={30} style={imageStyle}/>}
+                </div>
             </div>
-        </div>
-    );
+        );
 };
 
 const imageStyle = {

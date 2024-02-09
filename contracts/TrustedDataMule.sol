@@ -89,7 +89,7 @@ contract TrustedDataMule {
         return usersByAddress[signer].publicKey;
     }
 
-    function sendMessage(bytes32 _ethSignedMessageHash, string memory recipientId) public {
+    function sendMessage(bytes32 _ethSignedMessageHash, string memory recipientId) public view returns(string memory ip_address, string memory port){
 
         bytes32 recipientId_bytes = keccak256(abi.encodePacked(recipientId));
 
@@ -98,7 +98,7 @@ contract TrustedDataMule {
         string memory ip_address = recipientDetails[recipientId_bytes].ip_address;
         string memory port = recipientDetails[recipientId_bytes].port;
 
-        emit MessageSent(recipientId, ip_address, port, _ethSignedMessageHash);
+        return (ip_address, port);
 
     }
 }
